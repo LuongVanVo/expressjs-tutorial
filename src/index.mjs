@@ -8,12 +8,28 @@ app.get('/', (req, res) => {
     res.status(201).send({ msg: 'Welcome to the Home Page!' });
 });
 
+const mockUsers = [
+    { id: 1, username: 'anson', displayName: 'Anson', },
+    { id: 2, username: 'john', displayName: 'John Doe', },
+    { id: 3, username: 'jane', displayName: 'Jane Smith', },
+]
 app.get('/api/users', (req, res) => {
-    res.status(200).send([
-        { id: 1, username: 'anson', displayName: 'Anson', },
-        { id: 2, username: 'john', displayName: 'John Doe', },
-        { id: 3, username: 'jane', displayName: 'Jane Smith', },
-    ]);
+    res.status(200).send(mockUsers);
+});
+
+// Endpoint to get a user by ID
+app.get('/api/users/:id', (req, res) => {
+    console.log(req.params);
+    const parsedId = parseInt(req.params.id);
+    console.log(`Parsed ID: ${parsedId}`);
+    if (isNaN(parsedId)) {
+        return res.status(400).send({ msg: 'Bad Request: Invalid ID. '})
+    }
+    const findUser = mockUsers.find(user => user.id === parsedId);
+    if (!findUser) {
+        return res.sendStatus(404);
+    }
+    return res.status(200).send(findUser);
 });
 
 app.get('/api/products', (req, res) => {
