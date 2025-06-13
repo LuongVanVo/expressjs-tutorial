@@ -14,7 +14,17 @@ const mockUsers = [
     { id: 3, username: 'jane', displayName: 'Jane Smith', },
 ]
 app.get('/api/users', (req, res) => {
-    res.status(200).send(mockUsers);
+    console.log(req.query); // quey has form key value
+    const { 
+        query: { filter, value },
+    } = req;
+    // when filter and value are undefined
+    if (!filter && !value) return res.send(mockUsers);
+    if (filter && value) return res.send(
+        mockUsers.filter((user) => user[filter].includes(value))
+    );
+    // when filter is defined but value is not
+    return res.send(mockUsers);
 });
 
 // Endpoint to get a user by ID
@@ -32,6 +42,7 @@ app.get('/api/users/:id', (req, res) => {
     return res.status(200).send(findUser);
 });
 
+
 app.get('/api/products', (req, res) => {
     res.send([
         { id: 123, name: 'chicken breast', price: 12.99 },
@@ -46,6 +57,7 @@ app.get('/api/products', (req, res) => {
         { id: 107, name: 'tomato', price: 0.99 },
     ]);
 });
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log("Visit http://localhost:" + PORT);
@@ -53,4 +65,4 @@ app.listen(PORT, () => {
 
 // localhost:3000
 // localhost:3000/users
-// localhost:3000/products
+// localhost:3000/products?key=value&key2=value2
