@@ -80,3 +80,20 @@ app.listen(PORT, () => {
 // localhost:3000
 // localhost:3000/users
 // localhost:3000/products?key=value&key2=value2
+
+// Endpoint to update a user by ID
+app.put('/api/users/:id', (req, res) => {
+    const { 
+        body, 
+        params: { id } 
+    } = req;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) return res.sendStatus(400);
+
+    const findUserIndex = mockUsers.findIndex(user => user.id === parsedId);
+    if (findUserIndex === -1) return res.sendStatus(404);
+
+    mockUsers[findUserIndex] = { id: parsedId, ...body };
+    console.log(mockUsers);
+    return res.status(200).send(mockUsers[findUserIndex]);
+})
