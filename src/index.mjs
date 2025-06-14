@@ -1,5 +1,13 @@
 import express from "express";
-
+import {
+  query,
+  validationResult,
+  body,
+  matchedData,
+  checkSchema,
+  check,
+} from "express-validator";
+import { createUserValidationSchema } from "./utils/validationSchemas.mjs";
 const app = express();
 
 app.use(express.json()); // Middleware to parse JSON bodies
@@ -11,21 +19,21 @@ const loggingMiddleware = (req, res, next) => {
 };
 
 const resolveIndexById = (req, res, next) => {
-    const {
+  const {
     params: { id },
   } = req;
   const parsedId = parseInt(id);
   if (isNaN(parsedId)) return res.sendStatus(400);
   const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
   if (findUserIndex === -1) return res.sendStatus(404);
-  req.findUserIndex = findUserIndex; // to passing data 
+  req.findUserIndex = findUserIndex; // to passing data
   next();
 };
 // this middleware will apply all route below in expressJS
 // can apply number any middleware
 app.use(loggingMiddleware, (req, res, next) => {
-    console.log("Finished logging...");
-    next();
+  console.log("Finished logging...");
+  next();
 });
 
 const PORT = process.env.PORT || 3000;
@@ -48,24 +56,43 @@ const mockUsers = [
 ];
 
 // Endpoint to get all users with optional filtering
-app.get("/api/users", (req, res) => {
-  console.log(req.query); // quey has form key value
-  const {
-    query: { filter, value },
-  } = req;
-  // when filter and value are undefined
-  if (!filter && !value) return res.send(mockUsers);
-  if (filter && value)
-    return res.send(mockUsers.filter((user) => user[filter].includes(value)));
-  // when filter is defined but value is not
-  return res.send(mockUsers);
-});
+app.get(
+  "/api/users",
+  query("filter")
+    .isString()
+    .withMessage("Must be string")
+    .notEmpty()
+    .withMessage("Must not be empty")
+    .isLength({ min: 3, max: 10 })
+    .withMessage("Must be at least 3-10 characters"),
+  (req, res) => {
+    console.log(req.query); // quey has form key value
+    const result = validationResult(req);
+    console.log(result);
+    const {
+      query: { filter, value },
+    } = req;
+    // when filter and value are undefined
+    if (!filter && !value) return res.send(mockUsers);
+    if (filter && value)
+      return res.send(mockUsers.filter((user) => user[filter].includes(value)));
+    // when filter is defined but value is not
+    return res.send(mockUsers);
+  }
+);
 
 // Endpoint to create a new user
-app.post("/api/users", (req, res) => {
+app.post("/api/users", checkSchema(createUserValidationSchema), (req, res) => {
   console.log(req.body);
-  const { body } = req;
-  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
+  const result = validationResult(req);
+  console.log(result);
+
+  if (!result.isEmpty())
+    return res.status(400).send({ errors: result.array() });
+
+  // có thể sử dụng matchedData thay thế cho const { body } thông thường
+  const data = matchedData(req);
+  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
   mockUsers.push(newUser);
   console.log(mockUsers);
   return res.status(201).send(newUser);
