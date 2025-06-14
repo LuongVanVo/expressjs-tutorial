@@ -97,3 +97,19 @@ app.put('/api/users/:id', (req, res) => {
     console.log(mockUsers);
     return res.status(200).send(mockUsers[findUserIndex]);
 })
+
+// PATCH endpoint to partially update a user by ID
+app.patch('/api/users/:id', (req, res) => {
+    const {
+        body, 
+        params: { id }
+    } = req;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) return res.sendStatus(400);
+    const findUserIndex = mockUsers.findIndex(user => user.id === parsedId);
+    if (findUserIndex === -1 ) return res.sendStatus(404);
+
+    mockUsers[findUserIndex] = { ...mockUsers[findUserIndex], ...body };
+    console.log(mockUsers);
+    return res.status(200).send(mockUsers);
+})
