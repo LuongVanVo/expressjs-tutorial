@@ -2,6 +2,8 @@ import express from 'express';
 
 const app = express();
 
+app.use(express.json()); // Middleware to parse JSON bodies
+
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
@@ -13,6 +15,8 @@ const mockUsers = [
     { id: 2, username: 'john', displayName: 'John Doe', },
     { id: 3, username: 'jane', displayName: 'Jane Smith', },
 ]
+
+// Endpoint to get all users with optional filtering
 app.get('/api/users', (req, res) => {
     console.log(req.query); // quey has form key value
     const { 
@@ -26,6 +30,16 @@ app.get('/api/users', (req, res) => {
     // when filter is defined but value is not
     return res.send(mockUsers);
 });
+
+// Endpoint to create a new user
+app.post('/api/users', (req, res) =>{
+    console.log(req.body);
+    const { body } = req;
+    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
+    mockUsers.push(newUser);
+    console.log(mockUsers);
+    return res.status(201).send(newUser); 
+})
 
 // Endpoint to get a user by ID
 app.get('/api/users/:id', (req, res) => {
@@ -42,7 +56,7 @@ app.get('/api/users/:id', (req, res) => {
     return res.status(200).send(findUser);
 });
 
-
+// Endpoint all products
 app.get('/api/products', (req, res) => {
     res.send([
         { id: 123, name: 'chicken breast', price: 12.99 },
