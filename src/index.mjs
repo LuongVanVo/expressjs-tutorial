@@ -3,9 +3,16 @@ import routes from "./routes/index.mjs";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 import "./strategies/local-strategy.mjs";
+dotenv.config();
 
 const app = express();
+
+mongoose.connect(process.env.MONGODB_URL)
+  .then(() => console.log('Connected database'))
+  .catch((err) => console.log(`Error: ${err}`));
 
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(cookieParser("helloworld")); // Middleware to parse cookies, with a secret for signed cookies

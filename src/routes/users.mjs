@@ -10,6 +10,7 @@ import {
 import { mockUsers } from "../utils/constants.mjs";
 import { createUserValidationSchema } from "../utils/validationSchemas.mjs";
 import { resolveIndexByUserId } from "../utils/middleware.mjs";
+import { User } from "../mongoose/schemas/user.mjs";
 
 const router = Router();
 
@@ -31,8 +32,8 @@ router.get(
         throw err;
       }
       console.log(sessionData);
-    })
-    
+    });
+
     console.log(req.query); // quey has form key value
     const result = validationResult(req);
     console.log(result);
@@ -52,20 +53,21 @@ router.get(
 router.post(
   "/api/users",
   checkSchema(createUserValidationSchema),
-  (req, res) => {
-    console.log(req.body);
+  async (req, res) => {
+    // dùng để in ra các lỗi validation
     const result = validationResult(req);
-    console.log(result);
+    if (!result.isEmpty()) return res.send(result.array());
 
-    if (!result.isEmpty())
-      return res.status(400).send({ errors: result.array() });
-
-    // có thể sử dụng matchedData thay thế cho const { body } thông thường
     const data = matchedData(req);
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-    mockUsers.push(newUser);
-    console.log(mockUsers);
-    return res.status(201).send(newUser);
+    console.log(data);
+    const newUser = new User(data);
+    try {
+      const savedUser = await newUser.save();
+      return res.status(201).send(savedUser);
+    } catch (err) {
+      console.log(err);
+      return res.sendStatus(400);
+    }
   }
 );
 
@@ -142,7 +144,7 @@ router.post("/api/cart", (req, res) => {
   return res.status(201).send(item);
 });
 
-router.get('/api/cart', (req, res) => {
+router.get("/api/cart", (req, res) => {
   if (!req.session.user) return res.sendStatus(401);
   return res.send(req.session.cart ?? []);
 });
