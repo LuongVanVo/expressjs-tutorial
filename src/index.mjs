@@ -5,6 +5,7 @@ import session from "express-session";
 import passport from "passport";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import MongoStore from "connect-mongo";
 import "./strategies/local-strategy.mjs";
 dotenv.config();
 
@@ -19,11 +20,26 @@ app.use(cookieParser("helloworld")); // Middleware to parse cookies, with a secr
 app.use(
   session({
     secret: "voluong the dev",
-    saveUninitialized: false,
+    // true: Tạo session mới ngay khi người dùng truy cập, ngay cả khi session chưa có dữ liệu
+    // false: Chỉ tạo session khi thực sự có dữ liệu cần lưu vào session
+    // để có thể dễ dàng theo dõi người dùng với chỉ một id
+    // dùng để lưu trữ session vào MongoDB
+    // nếu không dùng MongoDB thì sẽ lưu trữ session vào bộ nhớ tạm thời của server
+    // dẫn đến mất session khi server bị tắt
+    saveUninitialized: true,
+    // true: lưu session vào MongoDB ngay cả khi không có dữ liệu gì
+    // false: Chỉ lưu lại session khi có thay đổi
     resave: false,
     cookie: {
       maxAge: 6 * 1000 * 60, // 1h
     },
+    // dùng để lưu trữ session vào MongoDB
+    // sử dụng connect-mongo để lưu trữ session vào MongoDB
+    // để có thể sử dụng session trên nhiều server khác nhau
+    // tránh mất session khi server bị tắt
+    store: MongoStore.create({
+      client: mongoose.connection.getClient(),
+    })
   })
 );
 app.use(passport.initialize());
@@ -42,6 +58,7 @@ app.get('/api/auth/status', (req, res) => {
   console.log(`Inside /auth/status endpoint. `);
   console.log(req.user);
   console.log(req.session);
+  console.log(req.sessionID);
   return req.user ? res.send(req.user) : res.sendStatus(401);
 });
 
