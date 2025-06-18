@@ -6,7 +6,9 @@ import passport from "passport";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import MongoStore from "connect-mongo";
-import "./strategies/local-strategy.mjs";
+// import "./strategies/local-strategy.mjs";
+import "./strategies/discord-strategy.mjs";
+
 dotenv.config();
 
 const app = express();
@@ -42,6 +44,7 @@ app.use(
     })
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -69,6 +72,14 @@ app.post('/api/auth/logout', (req, res) => {
     if (err) return res.sendStatus(400);
     res.send(200);
   });
+});
+
+// discord
+app.get('/api/auth/discord', passport.authenticate('discord'));
+app.get('/api/auth/discord/redirect', passport.authenticate("discord"), (req, res) => {
+  console.log(req.session);
+  console.log(req.user);
+  res.sendStatus(200);
 });
 
 app.use(routes);
